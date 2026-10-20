@@ -162,14 +162,16 @@ class FilaPrioridadeMin:
     def inserir(self, ident, chave):
         """
         Pré-condição: ident não está na fila. Coloca o novo elemento no fim
-        do vetor (próxima folha) e o faz subir até a posição correta.
-        O(log n) no pior caso (um _subir). Espaço adicional O(1).
+        do vetor (próxima folha) e o faz subir até a posição correta. Se a
+        chave já é >= à do pai (caso comum), a inserção termina sem chamar
+        _subir. O(log n) no pior caso (um _subir). Espaço adicional O(1).
         """
         i = len(self.ids)
         self.ids.append(ident)
         self.chaves.append(chave)
         self.pos[ident] = i
-        self._subir(i)
+        if i > 0 and chave < self.chaves[(i - 1) >> 1]:
+            self._subir(i)
 
     def alterar_chave(self, ident, nova):
         """
@@ -190,19 +192,44 @@ class FilaPrioridadeMin:
     def extrair_minimo(self):
         """
         Pré-condição: fila não vazia. Remove e devolve (id, chave) do menor
-        elemento: tira o último elemento do vetor, coloca-o na raiz e o faz
-        descer até o lugar certo.
-        O(log n) no pior caso (um _descer).
+        elemento. Variante "de baixo para cima" do sift-down: o último
+        elemento do vetor vai ocupar a raiz, mas em vez de compará-lo com os
+        dois filhos a cada nível, descemos o "buraco" da raiz até uma folha
+        sempre subindo o MENOR filho (1 comparação por nível), e só então
+        subimos o elemento a partir dali até o lugar certo. Em geral ele sobe
+        pouco, pois veio de uma folha. Mantém a ordem do heap e o `pos`.
+        O(log n) no pior caso: no máximo uma descida e uma subida pela altura.
         """
-        ident, chave = self.ids[0], self.chaves[0]
-        ult_id = self.ids.pop()
-        ult_chave = self.chaves.pop()
-        del self.pos[ident]
-        if self.ids:
-            self.ids[0] = ult_id
-            self.chaves[0] = ult_chave
-            self.pos[ult_id] = 0
-            self._descer(0)
+        ids, chaves, pos = self.ids, self.chaves, self.pos
+        ident, chave = ids[0], chaves[0]
+        ult_id = ids.pop()
+        ult_chave = chaves.pop()
+        del pos[ident]
+        n = len(ids)
+        if n == 0:
+            return ident, chave
+        i = 0
+        filho = 1
+        while filho < n:
+            if filho + 1 < n and chaves[filho + 1] < chaves[filho]:
+                filho += 1
+            ids[i] = ids[filho]
+            chaves[i] = chaves[filho]
+            pos[ids[i]] = i
+            i = filho
+            filho = 2 * i + 1
+        while i > 0:
+            pai = (i - 1) >> 1
+            if ult_chave < chaves[pai]:
+                ids[i] = ids[pai]
+                chaves[i] = chaves[pai]
+                pos[ids[i]] = i
+                i = pai
+            else:
+                break
+        ids[i] = ult_id
+        chaves[i] = ult_chave
+        pos[ult_id] = i
         return ident, chave
 
 
@@ -289,16 +316,18 @@ class GrafoRotas:
         fila = FilaPrioridadeMin()
         fila.inserir(origem, 0)
         saida = self.saida
-        while len(fila) > 0:
-            u, du = fila.extrair_minimo()
+        extrair, inserir, alterar = fila.extrair_minimo, fila.inserir, fila.alterar_chave
+        while fila.ids:                       # fila não vazia
+            u, du = extrair()
             for v, c in saida[u].items():
                 nd = du + c
-                if v not in dist:
+                antigo = dist.get(v)
+                if antigo is None:            # v acabou de ser descoberto
                     dist[v] = nd
-                    fila.inserir(v, nd)
-                elif nd < dist[v]:
+                    inserir(v, nd)
+                elif nd < antigo:             # caminho melhor: decrease-key
                     dist[v] = nd
-                    fila.alterar_chave(v, nd)
+                    alterar(v, nd)
         return dist
 
 

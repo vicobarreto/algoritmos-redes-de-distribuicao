@@ -53,7 +53,7 @@ Diminuiu: pode violar a relação com o **pai**, então `_subir`. Aumentou: pode
 *Armadilha:* é `<` estrito. Um depósito com lucro exatamente T **não** é removido.
 
 **4. Por que `pos` precisa ser atualizado a cada troca?**
-Senão `pos[id]` aponta para o lugar errado e a alteração de chave mexe em outro depósito. Na nossa implementação a posição é atualizada quando cada elemento é escrito (método do "buraco"). Durante um `_subir`/`_descer` o invariante fica momentaneamente incompleto e volta a valer ao fim.
+Senão `pos[id]` aponta para o lugar errado e a alteração de chave mexe em outro depósito. Na nossa implementação a posição é atualizada quando cada elemento é escrito (método do "buraco"). O `extrair_minimo` usa a variante "de baixo para cima": desce o buraco da raiz até uma folha (1 comparação por nível) e sobe o último elemento depois; continua O(log n). Durante um `_subir`/`_descer` o invariante fica momentaneamente incompleto e volta a valer ao fim.
 
 **5. Divisão e conquista do PAR, passo a passo.**
 Ordena por x, divide ao meio, resolve cada metade (δ_E, δ_D), δ = min. O melhor par pode ter um ponto em cada metade; então olhamos a **faixa** de largura 2δ em torno da reta divisória, ordenada por y. *Código:* `_par_recursivo`.
@@ -67,10 +67,14 @@ Em cada metade os pontos distam ≥ δ entre si. Num retângulo 2δ × δ cabem 
 **8. O que invalida o cache do PAR?**
 INSERIR e um REMOVER que fecha pelo menos 1 depósito (o conjunto de pontos mudou). LUCRO **não** invalida, porque o PAR só depende das coordenadas. A restrição proíbe estruturas de distâncias entre pares, e o cache guarda só **uma linha de resultado**, o que o enunciado permite expressamente.
 
-**9. Pontos fracos para você mesmo conhecer (seja honesto na entrevista).**
+**9. Para que serve o limite superior inicial do PAR?**
+Antes de dividir, tomamos o melhor par de vizinhos na ordem de x (O(n)). Como é um par real, δ já começa pequeno: as faixas centrais ficam estreitas e `_confere_pares` para logo. Sem ele o algoritmo está correto do mesmo jeito, só mais lento. *Teste feito:* `testes/teste_par.py` compara com a força bruta em 487 conjuntos (2 a 600 pontos); desligar a faixa de propósito faz o teste falhar (72 falhas).
+
+**10. Pontos fracos para você mesmo conhecer (seja honesto na entrevista).**
 - A intercalação por y usa `sorted(y_esq + y_dir)`. O Timsort detecta as duas sequências já ordenadas e faz uma só intercalação linear, mas a garantia O(n) vem dessa propriedade do Timsort, não de um `merge` escrito por nós.
 - A faixa usa `isqrt(d2) + 1` em vez de δ exato. Ela fica ligeiramente mais larga, o que é inofensivo (o laço confere a distância exata) e evita ponto flutuante.
-- Folhas de até 8 pontos usam força bruta: é só uma constante (O(1) por folha).
+- Folhas de até 32 pontos são resolvidas direto (ordena por y e confere pares com parada antecipada): é só uma constante (O(1) por folha).
+- O limite superior inicial (melhor par de vizinhos em x) é uma otimização de poda, não parte do algoritmo clássico. Saiba explicar que ele é um par **real** (então nunca dá resposta errada) e que só encolhe: por isso a análise dos 7 vizinhos continua valendo com δ = o melhor atual.
 
 ---
 

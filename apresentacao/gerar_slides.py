@@ -159,17 +159,25 @@ pagina("e2", "Entregável 2", "REMOVER sem varrer todos", corpo(
     + caixa("<b class='c'>Complexidade:</b> <b>O(k log n)</b> para k removidos: só toca em quem será fechado, nunca nos n depósitos todos. Depósito abaixo de T <i>continua vivo</i> até o REMOVER."),
     img("e2_remover")))
 
-pagina("e2", "Entregável 2", "PAR: divisão e conquista (1/2)", corpo(
-    lista("ol", ["Ordena os pontos por x uma vez e divide ao meio.",
-                 "Resolve cada metade recursivamente (δ<sub>E</sub>, δ<sub>D</sub>) e fica com δ = o menor.",
-                 "Devolve também os pontos ordenados por y (como um merge sort) para o nível de cima.",
-                 "Tudo em <b>inteiros</b>: comparamos distâncias <b>ao quadrado</b>."])
+pagina("e2", "Entregável 2", "PAR: ponto de partida (1/3)", corpo(
+    lista("ol", ["Ordena os pontos por x uma vez.",
+                 "Compara só os pontos <b>vizinhos</b> nessa ordem (n−1 pares): o melhor deles é um par <b>real</b>, o limite superior inicial.",
+                 "Se nada melhor existir, esse par já é a resposta; se existir, a recursão o substitui.",
+                 "Chama a divisão e conquista partindo desse limite."])
+    + caixa("<b class='c'>Complexidade:</b> ordenar O(n log n) + varrer vizinhos O(n). O limite não muda o pior caso, mas poda as faixas e as comparações da recursão."),
+    img("e2_par_ini")))
+
+pagina("e2", "Entregável 2", "PAR: divisão e conquista (2/3)", corpo(
+    lista("ol", ["Divide ao meio pela ordem em x.",
+                 "Resolve cada metade recursivamente; o par melhor fica numa lista compartilhada (<code>melhor</code>).",
+                 "Devolve os pontos ordenados por y (como um merge sort) para o nível de cima.",
+                 "Tudo em <b>inteiros</b>: comparamos distâncias <b>ao quadrado</b>. Folhas de até 32 pontos são resolvidas direto."])
     + caixa("<b class='c'>Por quê?</b> Comparar todos os pares é O(n²). Dividindo, o trabalho de cada nível é linear e há log n níveis."),
     img("e2_par_a")))
 
-pagina("e2", "Entregável 2", "PAR: a faixa central (2/2)", corpo(
+pagina("e2", "Entregável 2", "PAR: a faixa central (3/3)", corpo(
     lista("ol", ["Um par melhor que δ pode ter um ponto em cada metade; ambos estão a menos de δ da reta divisória: a <b>faixa</b>.",
-                 "Percorre a faixa ordenada por y e só compara com os próximos enquanto <code>dy &lt; δ</code>.",
+                 "<code>_confere_pares</code> percorre a faixa ordenada por y e <b>para</b> quando <code>dy² ≥ d²</code>.",
                  "Cada ponto vê no máximo <b>7</b> vizinhos (casa dos pombos num retângulo 2δ×δ).",
                  "Distância final = teto da raiz: <code>isqrt(d²)</code> (+1 se não for exata)."])
     + caixa("<b class='c'>Complexidade:</b> T(n) = 2T(n/2) + O(n) = <b>O(n log n)</b> por consulta. Sem matriz nem heap de distâncias; guardamos só o <b>último resultado</b> (cache)."),
@@ -223,8 +231,8 @@ pagina("geral", "Verificação", "Como testamos", corpo(
     lista("ul", ["Referência <b>ingênua</b> (força bruta) das 7 operações, conferida com o exemplo do enunciado.",
                  "<b>400 entradas aleatórias</b> por entregável, comparando saída linha a linha: <b>0 falhas em 1200 execuções</b>.",
                  "Valores pequenos de propósito, para forçar empates, prejuízo que zera a pilha, inalcançáveis e remoção com rotas.",
-                 "Pior caso (5000 depósitos, 100 mil períodos, 500 PAR, 200 DIST): e1 ≈ 0,5 s; e2 e e3 de 10 a 27 s."]),
-    caixa("<b class='c'>Limite honesto:</b> o limite de tempo da correção é desconhecido; e2 e e3 são os que mereceriam otimização adicional se ele for apertado.")))
+                 "Pior caso (4000 depósitos, 100 mil períodos, 500 PAR, 200 DIST): e1 ≈ 0,9 s; e2 ≈ 7 s; e3 ≈ 6 s (CPU, Python 3.11)."]),
+    caixa("<b class='c'>Limite honesto:</b> o limite de tempo da correção é desconhecido; e2 e e3 são os mais pesados; otimizamos o PAR e o heap, mas manter a fila com decrease-key (pedida no enunciado) custa um pouco de velocidade.")))
 
 open(os.path.join(AQUI, "slides.html"), "w", encoding="utf-8").write(
     '<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Rede de distribuição - AED</title>'

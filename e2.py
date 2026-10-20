@@ -169,14 +169,16 @@ class FilaPrioridadeMin:
     def inserir(self, ident, chave):
         """
         Pré-condição: ident não está na fila. Coloca o novo elemento no fim
-        do vetor (próxima folha) e o faz subir até a posição correta.
-        O(log n) no pior caso (um _subir). Espaço adicional O(1).
+        do vetor (próxima folha) e o faz subir até a posição correta. Se a
+        chave já é >= à do pai (caso comum), a inserção termina sem chamar
+        _subir. O(log n) no pior caso (um _subir). Espaço adicional O(1).
         """
         i = len(self.ids)
         self.ids.append(ident)
         self.chaves.append(chave)
         self.pos[ident] = i
-        self._subir(i)
+        if i > 0 and chave < self.chaves[(i - 1) >> 1]:
+            self._subir(i)
 
     def alterar_chave(self, ident, nova):
         """
@@ -197,19 +199,44 @@ class FilaPrioridadeMin:
     def extrair_minimo(self):
         """
         Pré-condição: fila não vazia. Remove e devolve (id, chave) do menor
-        elemento: tira o último elemento do vetor, coloca-o na raiz e o faz
-        descer até o lugar certo.
-        O(log n) no pior caso (um _descer).
+        elemento. Variante "de baixo para cima" do sift-down: o último
+        elemento do vetor vai ocupar a raiz, mas em vez de compará-lo com os
+        dois filhos a cada nível, descemos o "buraco" da raiz até uma folha
+        sempre subindo o MENOR filho (1 comparação por nível), e só então
+        subimos o elemento a partir dali até o lugar certo. Em geral ele sobe
+        pouco, pois veio de uma folha. Mantém a ordem do heap e o `pos`.
+        O(log n) no pior caso: no máximo uma descida e uma subida pela altura.
         """
-        ident, chave = self.ids[0], self.chaves[0]
-        ult_id = self.ids.pop()
-        ult_chave = self.chaves.pop()
-        del self.pos[ident]
-        if self.ids:
-            self.ids[0] = ult_id
-            self.chaves[0] = ult_chave
-            self.pos[ult_id] = 0
-            self._descer(0)
+        ids, chaves, pos = self.ids, self.chaves, self.pos
+        ident, chave = ids[0], chaves[0]
+        ult_id = ids.pop()
+        ult_chave = chaves.pop()
+        del pos[ident]
+        n = len(ids)
+        if n == 0:
+            return ident, chave
+        i = 0
+        filho = 1
+        while filho < n:
+            if filho + 1 < n and chaves[filho + 1] < chaves[filho]:
+                filho += 1
+            ids[i] = ids[filho]
+            chaves[i] = chaves[filho]
+            pos[ids[i]] = i
+            i = filho
+            filho = 2 * i + 1
+        while i > 0:
+            pai = (i - 1) >> 1
+            if ult_chave < chaves[pai]:
+                ids[i] = ids[pai]
+                chaves[i] = chaves[pai]
+                pos[ids[i]] = i
+                i = pai
+            else:
+                break
+        ids[i] = ult_id
+        chaves[i] = ult_chave
+        pos[ult_id] = i
         return ident, chave
 
 
@@ -277,76 +304,88 @@ class RegistroDepositos:
 # ---------------------------------------------------------------------------
 # Par mais próximo (divisão e conquista)
 # ---------------------------------------------------------------------------
-# Tamanho máximo de um subproblema resolvido por força bruta (todos os pares).
-# Só ajusta a constante: comparar <= FOLHA pontos é O(1).
-FOLHA = 8
+# Tamanho máximo de um subproblema resolvido direto, sem dividir mais. Só
+# ajusta a constante: um subproblema de <= FOLHA pontos custa O(1).
+FOLHA = 32
 
 
-def _par_recursivo(pts, lo, hi):
+def _confere_pares(por_y, melhor):
     """
-    Resolve o par mais próximo para pts[lo:hi].
-    Recebe `pts`: lista de tuplas (x, y, id) ORDENADA por x, e o intervalo
-    meio-aberto [lo, hi) com hi - lo >= 2.
-    Devolve (melhor, por_y): `melhor` = (d2, a, b) com d2 a distância ao
-    quadrado (inteiro) e a < b os ids; `por_y` = os mesmos pontos de
-    pts[lo:hi] ordenados por y (usado pelo nível acima, como no merge sort).
-    Só usa aritmética inteira: compara distâncias AO QUADRADO.
+    Recebe `por_y`: lista de tuplas (x, y, id) ORDENADA por y, e `melhor`:
+    lista [d2, a, b] com o melhor par conhecido (d2 = distância ao quadrado).
+    Para cada ponto, olha os seguintes na ordem de y e PARA quando a
+    diferença de y já não pode melhorar (dy*dy >= d2 de `melhor`). Se acha um
+    par estritamente melhor, atualiza `melhor` (a < b).
+    Só aritmética inteira. Tempo: O(len(por_y)) quando cada ponto tem O(1)
+    vizinhos a menos de delta em y (garantido nas faixas, ver abaixo).
+    """
+    tam = len(por_y)
+    for i in range(tam):
+        xi, yi, idi = por_y[i]
+        for j in range(i + 1, tam):
+            xj, yj, idj = por_y[j]
+            dy = yj - yi
+            if dy * dy >= melhor[0]:
+                break       # a lista está ordenada por y: os próximos são piores
+            d2 = (xi - xj) ** 2 + dy * dy
+            if d2 < melhor[0]:
+                melhor[0] = d2
+                melhor[1] = idi if idi < idj else idj
+                melhor[2] = idj if idi < idj else idi
+
+
+def _par_recursivo(pts, lo, hi, melhor):
+    """
+    Resolve o par mais próximo para pts[lo:hi] (hi - lo >= 1).
+    Recebe `pts`: lista de tuplas (x, y, id) ORDENADA por x; o intervalo
+    meio-aberto [lo, hi); e `melhor`: lista [d2, a, b] com o melhor par
+    conhecido até agora (compartilhada por toda a recursão; d2 é a distância
+    ao quadrado, a < b são ids). Efeito: ao terminar, melhor[0] <= distância
+    ao quadrado de qualquer par DENTRO de pts[lo:hi] (se havia par melhor, ele
+    foi gravado em `melhor`). Devolve os pontos de pts[lo:hi] ordenados por y
+    (usado pelo nível acima, como no merge sort). Só usa aritmética inteira.
+
+    Detalhe (limite superior): `melhor` já começa com um par real (ver
+    par_mais_proximo), então delta = sqrt(melhor[0]) é sempre >= a distância
+    mínima verdadeira e só encolhe. Só precisamos achar pares ESTRITAMENTE
+    melhores que `melhor`; isso poda faixas e comparações sem perder o
+    resultado. Como delta <= delta_E, delta_D (invariante acima), a conta
+    dos "no máximo 7 vizinhos" continua valendo.
+
     Complexidade: T(n) = 2T(n/2) + O(n) = O(n log n).
-      * caso base (n <= FOLHA): compara todos os pares, O(1);
+      * caso base (n <= FOLHA): ordena por y e confere os pares, O(1);
       * divide ao meio pela ordem em x: O(1);
       * junta as duas listas ordenadas por y: O(n) (sorted do Python
         detecta as duas sequências já ordenadas e faz uma só intercalação);
-      * faixa central: O(n), pois cada ponto é comparado com no máximo 7
-        seguintes (ver abaixo).
+      * faixa central: O(n) para montar, e cada ponto é comparado com no
+        máximo 7 seguintes (ver abaixo).
     Espaço adicional O(n) (listas por_y e faixa); profundidade O(log n).
     """
     n = hi - lo
     if n <= FOLHA:
         por_y = sorted(pts[lo:hi], key=itemgetter(1))
-        d2_min = None
-        for i in range(n):
-            xi, yi, idi = por_y[i]
-            for j in range(i + 1, n):
-                xj, yj, idj = por_y[j]
-                d2 = (xi - xj) ** 2 + (yi - yj) ** 2
-                if d2_min is None or d2 < d2_min:
-                    d2_min = d2
-                    a, b = (idi, idj) if idi < idj else (idj, idi)
-        melhor = (d2_min, a, b)
-        return melhor, por_y
+        _confere_pares(por_y, melhor)
+        return por_y
 
     meio = (lo + hi) // 2
     x_meio = pts[meio][0]                       # reta divisória
-    esq, y_esq = _par_recursivo(pts, lo, meio)
-    dir_, y_dir = _par_recursivo(pts, meio, hi)
-    melhor = esq if esq < dir_ else dir_        # delta = min(delta_E, delta_D)
+    y_esq = _par_recursivo(pts, lo, meio, melhor)
+    y_dir = _par_recursivo(pts, meio, hi, melhor)
     por_y = sorted(y_esq + y_dir, key=itemgetter(1))
 
     # Um par "cruzado" (um ponto em cada metade) só melhora o resultado se
     # os dois estão a distância horizontal < delta da reta: é a faixa. Usamos
     # o piso inteiro da raiz mais 1 (sem float); incluir pontos a mais é
-    # inofensivo, pois o laço abaixo confere a distância exata de cada par.
-    d2_min = melhor[0]
-    delta = math.isqrt(d2_min) + 1              # >= delta real: faixa um pouco larga
+    # inofensivo, pois _confere_pares usa a distância exata de cada par.
+    delta = math.isqrt(melhor[0]) + 1
     esquerda, direita = x_meio - delta, x_meio + delta
     faixa = [p for p in por_y if esquerda < p[0] < direita]
-    tam = len(faixa)
-    for i in range(tam):
-        xi, yi, idi = faixa[i]
-        for j in range(i + 1, tam):
-            xj, yj, idj = faixa[j]
-            dy = yj - yi
-            if dy * dy >= d2_min:
-                break       # a faixa está ordenada por y: os próximos são piores
-            d2 = (xi - xj) ** 2 + dy * dy
-            if d2 < d2_min:
-                d2_min = d2
-                melhor = (d2, min(idi, idj), max(idi, idj))
+    _confere_pares(faixa, melhor)
     # Por que o laço interno é O(1): em cada metade os pontos distam >= delta
     # entre si; um retângulo 2*delta x delta da faixa comporta no máximo 8
     # desses pontos (princípio da casa dos pombos em 8 quadrados de
     # delta/2), logo cada ponto vê no máximo 7 vizinhos antes do break.
-    return melhor, por_y
+    return por_y
 
 
 def teto_raiz_inteira(d2):
@@ -366,14 +405,31 @@ def par_mais_proximo(coord):
     """
     Pré-condição: `coord` (dict id -> (x, y)) tem pelo menos 2 depósitos,
     com coordenadas distintas e par mais próximo único.
-    Devolve (a, b, d): a < b são os ids do par mais próximo e d é a
-    distância euclidiana arredondada para cima.
-    Tempo O(n log n): ordenar por x (O(n log n)) + divisão e conquista
-    (O(n log n)). Espaço adicional O(n).
+    Devolve (a, b, d): a < b são ids do par mais próximo e d é a distância
+    euclidiana arredondada para cima.
+    Passos:
+      1. ordena os pontos por x: O(n log n);
+      2. limite superior inicial: o melhor entre pontos vizinhos na ordem de
+         x. É um par REAL, logo uma resposta válida caso nada melhor exista:
+         O(n);
+      3. divisão e conquista (_par_recursivo) partindo desse limite:
+         O(n log n).
+    Tempo total O(n log n); espaço adicional O(n).
     """
-    pts = sorted(((x, y, ident) for ident, (x, y) in coord.items()))
-    (d2, a, b), _ = _par_recursivo(pts, 0, len(pts))
-    return a, b, teto_raiz_inteira(d2)
+    pts = [(x, y, ident) for ident, (x, y) in coord.items()]
+    pts.sort()
+    melhor = None
+    ant = pts[0]
+    for k in range(1, len(pts)):
+        q = pts[k]
+        dx = ant[0] - q[0]
+        dy = ant[1] - q[1]
+        d2 = dx * dx + dy * dy
+        if melhor is None or d2 < melhor[0]:
+            melhor = [d2, min(ant[2], q[2]), max(ant[2], q[2])]
+        ant = q
+    _par_recursivo(pts, 0, len(pts), melhor)
+    return melhor[1], melhor[2], teto_raiz_inteira(melhor[0])
 
 
 # ---------------------------------------------------------------------------

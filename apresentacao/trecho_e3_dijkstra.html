@@ -94,15 +94,17 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
     <span class="n">fila</span> <span class="o">=</span> <span class="n">FilaPrioridadeMin</span><span class="p">()</span>
     <span class="n">fila</span><span class="o">.</span><span class="n">inserir</span><span class="p">(</span><span class="n">origem</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="n">saida</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saida</span>
-    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">fila</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">u</span><span class="p">,</span> <span class="n">du</span> <span class="o">=</span> <span class="n">fila</span><span class="o">.</span><span class="n">extrair_minimo</span><span class="p">()</span>
+    <span class="n">extrair</span><span class="p">,</span> <span class="n">inserir</span><span class="p">,</span> <span class="n">alterar</span> <span class="o">=</span> <span class="n">fila</span><span class="o">.</span><span class="n">extrair_minimo</span><span class="p">,</span> <span class="n">fila</span><span class="o">.</span><span class="n">inserir</span><span class="p">,</span> <span class="n">fila</span><span class="o">.</span><span class="n">alterar_chave</span>
+    <span class="k">while</span> <span class="n">fila</span><span class="o">.</span><span class="n">ids</span><span class="p">:</span>                       <span class="c1"># fila não vazia</span>
+        <span class="n">u</span><span class="p">,</span> <span class="n">du</span> <span class="o">=</span> <span class="n">extrair</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">saida</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">nd</span> <span class="o">=</span> <span class="n">du</span> <span class="o">+</span> <span class="n">c</span>
-            <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dist</span><span class="p">:</span>
+            <span class="n">antigo</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">antigo</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>            <span class="c1"># v acabou de ser descoberto</span>
                 <span class="n">dist</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">nd</span>
-                <span class="n">fila</span><span class="o">.</span><span class="n">inserir</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">nd</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">nd</span> <span class="o">&lt;</span> <span class="n">dist</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+                <span class="n">inserir</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">nd</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">nd</span> <span class="o">&lt;</span> <span class="n">antigo</span><span class="p">:</span>             <span class="c1"># caminho melhor: decrease-key</span>
                 <span class="n">dist</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">nd</span>
-                <span class="n">fila</span><span class="o">.</span><span class="n">alterar_chave</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">nd</span><span class="p">)</span>
+                <span class="n">alterar</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">nd</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dist</span>
 </pre></div></div>

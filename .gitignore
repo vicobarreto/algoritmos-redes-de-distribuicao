@@ -1,2 +1,2 @@
-testes/grande.txt
+testes/grande_*.txt
 __pycache__/
