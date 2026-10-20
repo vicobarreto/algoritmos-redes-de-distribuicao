@@ -93,3 +93,15 @@ python testes/gerar_grande.py            # teste 4: gera testes/grande.txt
 ## Limitações dos testes (o que não foi coberto)
 - O exemplo do PDF foi usado para validar a referência, mas **não** foi alimentado diretamente em cada `eN.py`, porque o enunciado só exercita um subconjunto de operações em cada estágio (o exemplo mistura todas). Cada estágio foi testado com entradas aleatórias do seu próprio subconjunto.
 - Não há acesso à ferramenta de correção, então o limite de tempo real é desconhecido.
+
+## Apresentação (PDF)
+
+`apresentacao/rede-distribuicao-aed.pdf`: 17 slides com o passo a passo geral dos algoritmos, as complexidades e como as peças se juntam para produzir a saída de cada entregável.
+
+Como foi gerado (reproduzível):
+1. `python apresentacao/gerar_trechos.py` extrai do código real (`e1.py`, `e2.py`, `e3.py`, sem docstrings) 11 trechos e os destaca com pygments em `trecho_*.html`.
+2. O Playwright abre cada `trecho_*.html` e tira o print em `apresentacao/prints/*.png` (zoom 2x).
+3. `python apresentacao/gerar_slides.py` monta `slides.html` (1280x720 por slide) com os prints.
+4. O Playwright abre `slides.html` e imprime o PDF (`page.pdf`, fundo ligado, tamanho 1280x720).
+
+Se o código mudar, rodar os passos 1 a 4 de novo para atualizar os prints.
