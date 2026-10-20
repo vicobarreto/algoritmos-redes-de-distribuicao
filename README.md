@@ -68,7 +68,7 @@ Gera `testes/grande.txt` (não versionado, é grande) com os limites do enunciad
 
 Tempos medidos (Python 3.11, Windows, máquina de desenvolvimento, uma execução cada):
 
-| Programa | Tempo |
+| Programa | Tempo ||
 |---|---|
 | `e1.py` | ~0,4–0,7 s |
 | `e2.py` | ~27 s (a única PAR sem cache custa ~31 ms; 500 PAR ≈ 16 s, o resto são os 100000 LUCRO e INSERIR) |
