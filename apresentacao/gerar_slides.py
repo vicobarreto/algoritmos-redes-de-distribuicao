@@ -87,7 +87,7 @@ slides.append(f'''<section class="slide" style="--c:{COR["geral"]};display:flex;
 <h1 style="font-size:70px;margin-top:26px">Rede de distribuição</h1>
 <div class="sub" style="font-size:28px;margin-top:14px">Como o algoritmo funciona, quanto custa e como as peças se juntam na saída</div>
 <div style="margin-top:46px;font-size:21px;color:#cbd5e1;line-height:1.7">Entregável 1 · histórico de períodos<br>Entregável 2 · fechamento e proximidade<br>Entregável 3 · rede de rotas</div>
-<div style="margin-top:44px;font-size:20px;color:#94a3b8">Autores: [nomes do grupo]</div></section>''')
+<div style="margin-top:44px;font-size:20px;color:#94a3b8">Autores: Vinicius Lima, Laércio Neto e Zaque Mateus</div></section>''')
 
 # 2 visão geral ------------------------------------------------------
 slides.append(f'''<section class="slide" style="--c:{COR["geral"]}"><span class="tag">Visão geral</span>

@@ -2,7 +2,7 @@
 Algoritmos e Estruturas de Dados - Turma BCC - 2026.2
 Rede de distribuição - Entregável 3: rede de rotas
 
-Autores: [preencher nomes e matrículas do grupo]
+Autores: Vinicius Lima, Laércio Neto e Zaque Mateus
 
 Operações exercitadas neste entregável: DIST, INSERIR e REMOVER (a linha
 impressa por REMOVER também é conferida). LUCRO também é tratado, pois é ele

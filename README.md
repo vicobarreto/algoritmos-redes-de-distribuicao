@@ -10,7 +10,7 @@ Três entregáveis em Python, cada um num único arquivo e com `main` como ponto
 
 A documentação exigida pela seção 2.6 do enunciado (cabeçalho, invariantes, pré-condições, efeitos e complexidades) está nos comentários e docstrings de cada arquivo.
 
-Antes de entregar, preencher a linha `Autores:` do cabeçalho de cada arquivo com nomes e matrículas.
+Autores: Vinicius Lima, Laércio Neto e Zaque Mateus.
 
 ## Resumo das decisões
 

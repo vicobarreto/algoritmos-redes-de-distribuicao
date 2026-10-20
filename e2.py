@@ -2,7 +2,7 @@
 Algoritmos e Estruturas de Dados - Turma BCC - 2026.2
 Rede de distribuição - Entregável 2: fechamento e proximidade
 
-Autores: [preencher nomes e matrículas do grupo]
+Autores: Vinicius Lima, Laércio Neto e Zaque Mateus
 
 Operações exercitadas neste entregável: REMOVER, PAR, INSERIR e LUCRO.
 As rotas (setup e INSERIR) são lidas e descartadas.

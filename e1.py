@@ -2,7 +2,7 @@
 Algoritmos e Estruturas de Dados - Turma BCC - 2026.2
 Rede de distribuição - Entregável 1: histórico de períodos
 
-Autores: [preencher nomes e matrículas do grupo]
+Autores: Vinicius Lima, Laércio Neto e Zaque Mateus
 
 Operações exercitadas neste entregável: INSERIR, LUCRO, MELHOR e PROSPERIDADE.
 As rotas (setup e INSERIR) são lidas e descartadas.
